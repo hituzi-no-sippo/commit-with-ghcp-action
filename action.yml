@@ -1,0 +1,138 @@
+---
+name: Commit with ghcp
+description: |
+  Commit with ghcp.
+
+  - Tagret Repository
+    The repository running the action
+  - Tagret branch
+    The branch running the action
+
+  Requires a GitHub token.
+
+  The GitHub token used depends on whether `inputs.github_token` is inputed.
+
+  - Input `inputs.github_token`
+    Use `inputs.github_token`.
+
+    ```YAML
+    - uses: hituzi-no-sippo/commit-with-ghcp-action@v1.0.0
+      with:
+        files: README.md
+        commit_message: "docs: add README"
+        github_token: <GITHUB_TOKEN>
+    ```
+
+  - Does not input `inputs.github_token`
+    Generate a GitHub token with GitHub app.
+    Use `inputs.github_app_id` and `inputs.github_app_private_key`.
+
+    ```YAML
+    - uses: hituzi-no-sippo/commit-with-ghcp-action@v1.0.0
+      with:
+        files: README.md
+        commit_message: "docs: add README"
+        github_app_id: <GITHUB_APP_ID>
+        github_app_private_key: <GITHUB_APP_PRIVATE_KEY>
+    ```
+
+  GitHub token generated with GitHub app triggers GitHub Actions workflow.
+  `secrets.GITHUB_TOKEN` does not trigger GitHub Actions workflow.
+  https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
+  > When you use the repository's `GITHUB_TOKEN` to perform tasks,
+  > events triggered by the `GITHUB_TOKEN`,
+  > with the exception of `workflow_dispatch` and `repository_dispatch`,
+  > will not create a new workflow run.
+
+inputs:
+  commit_message:
+    required: true
+    description: Message of commit.
+  files:
+    required: true
+    description: Files to commit.
+  github_token:
+    required: false
+    description: |
+      GitHub token is used on commit.
+
+      If use `secrets.GITHUB_TOKEN`, add `write` access of contents.
+      This is because to commit need to `write` access of contents.
+
+      ```YAML
+      jobs:
+        commit:
+          name: commit
+          permissions:
+            contents: write
+      ```
+
+      - https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+      - https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
+      - https://docs.github.com/en/rest/overview/permissions-required-for-github-apps?apiVersion=2022-11-28#repository-permissions-for-contents
+  github_app_id:
+    required: false
+    description: |
+      GitHub app ID to generate GitHub token.
+      Generated GitHub token is used on commit.
+
+      The GitHub app of `secrets.github_app_id` and `secrets.github_app_private_key`
+      requires `Read and write` access of contents.
+      This is because this workflow create commit.
+
+      References
+      - https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/choosing-permissions-for-a-github-app
+      - https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/managing-private-keys-for-github-apps#generating-private-keys
+      - https://docs.github.com/en/rest/overview/permissions-required-for-github-apps#repository-permissions-for-contents
+  github_app_private_key:
+    required: false
+    description: |
+      GitHub app private key to generate GitHub token.
+      Generated GitHub token is used on commit.
+
+runs:
+  using: composite
+  steps:
+    - name: Generate token
+      id: generate_token
+      # Priority of output GitHub Token
+      # 1. `inputs.github_token`
+      # 2. Generate GitHub token with GitHub app
+      #    If does not set `inputs.github_token`, generate GitHub token.
+      #    Use `inputs.github_app_id` and `inputs.github_app_private_key`.
+      #    Use tibdex/github-app-token action to
+      #    generate GitHub token with GitHUb app.
+      uses: suzuki-shunsuke/github-token-action@04d633c696e9d09e958c8b815c75db9606d6d927 # v0.2.0
+      with:
+        github_token: ${{ inputs.github_token }}
+        github_app_id: ${{ inputs.github_app_id }}
+        github_app_private_key: ${{ inputs.github_app_private_key }}
+
+    - name: Does not have token
+      if: ${{ steps.generate_token.outputs.token_type == 'empty' }}
+      run: exit 1
+      shell: bash
+
+    - name: Download ghcp
+      shell: bash
+      run: |
+        wget \
+          --quiet \
+          --output-document=ghcp.zip \
+          https://github.com/int128/ghcp/releases/download/v1.13.2/ghcp_linux_amd64.zip
+        unzip -d ./bin ghcp.zip
+
+    - name: Commit with ghcp
+      run: |
+        echo "$FILES" |
+          xargs \
+          ./bin/ghcp commit \
+          --message "$COMMIT_MESSAGE" \
+          --repo "$GITHUB_REPOSITORY" \
+          --branch "$BRANCH"
+      env:
+        COMMIT_MESSAGE: ${{ inputs.commit_message }}
+        FILES: ${{ inputs.files }}
+        BRANCH: ${{ github.ref_name }}
+        GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+      shell: bash
