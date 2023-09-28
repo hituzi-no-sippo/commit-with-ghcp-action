@@ -31,6 +31,17 @@
         "github-actions"
       ]
     }
+  ],
+  "customManagers": [
+    {
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "int128/ghcp",
+      "fileMatch": [
+        "action.yml"
+      ],
+      "matchStrings": [
+        "github\\.com/int128/ghcp/releases/download/(?<currentValue>[^'\" \\n]+)/ghcp_linux_amd64.zip"
+      ]
+    }
   ]
 }
-
