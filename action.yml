@@ -102,7 +102,7 @@ runs:
       #    Use `inputs.github_app_id` and `inputs.github_app_private_key`.
       #    Use tibdex/github-app-token action to
       #    generate GitHub Token with GitHUb App.
-      uses: suzuki-shunsuke/github-token-action@a058de0a42e494414cf4c112436d663a06fd16c0 # v0.1.0
+      uses: suzuki-shunsuke/github-token-action@04d633c696e9d09e958c8b815c75db9606d6d927 # v0.2.0
       with:
         github_token: ${{ inputs.github_token }}
         github_app_id: ${{ inputs.github_app_id }}
