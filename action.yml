@@ -119,7 +119,7 @@ runs:
         wget \
           --quiet \
           --output-document=ghcp.zip \
-          https://github.com/int128/ghcp/releases/download/v1.13.1/ghcp_linux_amd64.zip
+          https://github.com/int128/ghcp/releases/download/v1.13.2/ghcp_linux_amd64.zip
         unzip -d ./bin ghcp.zip
 
     - name: Commit with ghcp
