@@ -102,6 +102,7 @@ runs:
       #    Use `inputs.github_app_id` and `inputs.github_app_private_key`.
       #    Use tibdex/github-app-token action to
       #    generate GitHub token with GitHUb app.
+      # yamllint disable-line rule:line-length
       uses: suzuki-shunsuke/github-token-action@04d633c696e9d09e958c8b815c75db9606d6d927 # v0.2.0
       with:
         github_token: ${{ inputs.github_token }}
@@ -124,12 +125,13 @@ runs:
 
     - name: Commit with ghcp
       run: |
-        echo "$FILES" |
-          xargs \
-          ./bin/ghcp commit \
+        read -r -a files <<< "$FILES"
+
+        ./bin/ghcp commit \
           --message "$COMMIT_MESSAGE" \
           --repo "$GITHUB_REPOSITORY" \
-          --branch "$BRANCH"
+          --branch "$BRANCH" \
+          "${files[@]}"
       env:
         COMMIT_MESSAGE: ${{ inputs.commit_message }}
         FILES: ${{ inputs.files }}
