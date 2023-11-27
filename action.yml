@@ -103,7 +103,7 @@ runs:
       #    Use tibdex/github-app-token action to
       #    generate GitHub token with GitHUb app.
       # yamllint disable-line rule:line-length
-      uses: suzuki-shunsuke/github-token-action@04d633c696e9d09e958c8b815c75db9606d6d927 # v0.2.0
+      uses: suzuki-shunsuke/github-token-action@350d7506222e3a0016491abe85b5c4dd475b67d1 # v0.2.1
       with:
         github_token: ${{ inputs.github_token }}
         github_app_id: ${{ inputs.github_app_id }}
